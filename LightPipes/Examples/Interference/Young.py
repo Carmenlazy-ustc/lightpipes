@@ -1,3 +1,4 @@
+import sys
 from LightPipes import *
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -28,3 +29,5 @@ F=Fresnel(z,F)
 I=Intensity(2,F)
 plt.imshow(I, cmap='rainbow'); plt.axis('off');plt.title('intensity pattern')
 plt.show()
+print('Executed with python version: ' + sys.version)
+print('using LightPipes version: ' + LPversion)
