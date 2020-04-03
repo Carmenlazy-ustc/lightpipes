@@ -1311,10 +1311,25 @@ CMPLXVEC lpspy::Zernike(int n, int m, double R, double A, CMPLXVEC Field ){
     }
     return Field;
 }
-void lpspy::test(){
+int lpspy::test(){
     cout << test_string << endl;
+    return 1; //1 indicates success
 }
-
+void lpspy::internal_setN(int newN){
+    N = newN;
+}
+int lpspy::internal_getInt1(){
+    return int1;
+}
+void lpspy::internal_setInt1(int newInt1){
+    int1 = newInt1;
+}
+double lpspy::internal_getDoub1(){
+    return doub1;
+}
+void lpspy::internal_setDoub1(double newDoub1){
+    doub1 = newDoub1;
+}
 
 double lpspy::getGridSize(){
     return size;

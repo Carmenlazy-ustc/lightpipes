@@ -48,8 +48,8 @@ ext = Extension(
     language="c++",
     #extra_compile_args=['-std=c++11','-Wunused-value'],
 )
-#extensions = cythonize([ext],language_level = "3")
-extensions = cythonize([ext])
+extensions = cythonize([ext],language_level = "3")
+#extensions = cythonize([ext])
 exec(open('./LightPipes/_version.py').read())
 
 setup(

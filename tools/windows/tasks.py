@@ -6,11 +6,10 @@ from getpass import getuser
 from os.path import abspath, dirname, exists, join
 
 from invoke import task
-#from invoke.platform import WINDOWS
-from invoke.terminals import WINDOWS
+from invoke.platform import WINDOWS
 
-CONDA_32 = r'C:\Users\{}\Miniconda3_32\Scripts\conda.exe'.format(getuser())
-CONDA_64 = r'C:\Users\{}\Miniconda3_64\Scripts\conda.exe'.format(getuser())
+CONDA_32 = r'C:\Users\{}\Miniconda32\Scripts\conda.exe'.format(getuser())
+CONDA_64 = r'C:\Users\{}\Miniconda64\Scripts\conda.exe'.format(getuser())
 
 SHELL = r'C:\Windows\system32\cmd.exe'
 if WINDOWS:
@@ -43,12 +42,10 @@ DIAGNOSE = project_path('tools', 'diagnose.py')
 
 SUPPORTED_BIT = ['32','64']
 SUPPORTED_CPYTHON = [
-#    '27',
-    '34',
+    '27',
+#    '34',
     '35',
     '36',
-    '37',
-    '38',
 ]
 
 
@@ -71,7 +68,6 @@ class Builder:
             'tools', 'windows', 'envs', bit+'bit', 'py'+version)
         self.python = join(self.python_dir, 'python.exe')
         self.pip = join(self.python_dir, 'Scripts', 'pip.exe')
-
 
     def conda_create(self):
         CREATE = '{conda} create -y -p {python_dir} python={dot_version}'
@@ -113,7 +109,6 @@ class Builder:
         self.run(TEST.format(python=self.python))
 
     def build(self):
-
         print('build for {}'.format(self.name).center(60, '-'))
         if exists(self.python_dir):
             print('{} already exists, skip creating'.format(self.python_dir))
