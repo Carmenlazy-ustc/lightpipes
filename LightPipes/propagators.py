@@ -313,7 +313,7 @@ def Forward(z, sizenew, Nnew, Fin):
             field_out[j_new, i_new] = Temp_c.sum() #complex elementwise sum
     return Fout
 
-def TODOForvard(self, z, Fin):
+def Forvard(z, Fin):
     """
     Fout = Forvard(z, Fin)
 
@@ -333,104 +333,61 @@ def TODOForvard(self, z, Fin):
     :ref:`Diffraction from a circular aperture <Diffraction>`
     
     """
-    # return self.thisptr.Forvard(z, Fin)
-    """CPP
-        fftw_complex* in_out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N * N);
-        if (in_out == NULL) return Field;
-        int ii, ij, n12;
-        long ik, ir;
-        double z,z1,cc;
-        double sw, sw1, bus, abus, pi2, cab, sab, kz, cokz, sikz;
+    Fout = Field.shallowcopy(Fin)
+    N = Fout.N
+    size = Fout.siz
+    lam = Fout.lam
     
-        pi2=2.*3.141592654;
-        z=fabs(zz);
-        kz = pi2/lambda*z;
-        cokz = cos(kz);
-        sikz = sin(kz);
-        ik=0;
-        ii=ij=1;
-        for (int i=0;i<N; i++){
-            for (int j=0;j<N; j++){
-                in_out[ik][0] = Field.at(i).at(j).real()*ii*ij;
-                in_out[ik][1] = Field.at(i).at(j).imag()*ii*ij; 
-                ik++;
-                ij=-ij;
-            }
-            ii=-ii;
-        }
-        fftw_plan planF = fftw_plan_dft_2d (N, N, in_out, in_out, FFTW_FORWARD, FFTW_ESTIMATE);
-        if (planF == NULL) return Field;
-        fftw_plan planB = fftw_plan_dft_2d (N, N, in_out, in_out, FFTW_BACKWARD, FFTW_ESTIMATE);
-        if (planB == NULL) return Field;  
-        // Spatial filter, (c)  Gleb Vdovin  1986:  
-        if (zz>=0.) fftw_execute(planF);
-        else fftw_execute(planB);
-        if(zz >= 0.){
-           z1=z*lambda/2.;
-           n12=int(N/2);
-           ik=0;
-           for (int i=0;i<N; i++){
-               for (int j=0;j<N; j++){ 
-                   sw=((i-n12)/size);
-                   sw *= sw;
-                   sw1=((j-n12)/size);
-                   sw1 *= sw1;
-                   sw += sw1; 
-                   bus=z1*sw;
-                   ir = (long) bus;
-                   abus=pi2*(ir- bus);
-                   cab=cos(abus);
-                   sab=sin(abus);
-                   cc=in_out[ik][0]*cab-in_out[ik][1]*sab;
-                   in_out[ik][1]=in_out[ik][0]*sab+in_out[ik][1]*cab;
-                   in_out[ik][0]=cc;
-                   ik++;
-               }
-           }
-        }
-        else { 
-          z1=z*lambda/2.;
-          n12=int(N/2);
-          ik=0;
-          for (int i=0;i<N; i++){
-            for (int j=0;j<N; j++){ 
-                sw=((i-n12)/size);
-                sw *= sw;
-                sw1=((j-n12)/size);
-                sw1 *= sw1;
-                sw += sw1; 
-                bus=z1*sw;
-                ir = (long) bus;
-                abus=pi2*(ir- bus);
-                cab=cos(abus);
-                sab=sin(abus);
-                cc=in_out[ik][0]*cab + in_out[ik][1]*sab;
-                in_out[ik][1]= in_out[ik][1]*cab-in_out[ik][0]*sab;
-                in_out[ik][0]=cc;
-                ik++;
-            }
-          }
-        }
-        if (zz>=0.) fftw_execute(planB);
-        else fftw_execute(planF);
-        ik=0;
-        ii=ij=1;
-        for (int i=0;i<N; i++){    
-            for (int j=0;j<N; j++ ){
-                Field.at(i).at(j) = complex<double>((in_out[ik][0]*ii*ij * cokz - in_out[ik][1]*ii*ij * sikz)/N/N,\
-                                                   ( in_out[ik][1]*ii*ij * cokz + in_out[ik][0]*ii*ij * sikz)/N/N );
-                ij=-ij;
-                ik++;
-            }
-            ii=-ii;
-        }
-        fftw_destroy_plan(planF);
-        fftw_destroy_plan(planB);
-        fftw_free(in_out);
-        fftw_cleanup();
-        return Field;
-    """
-    raise NotImplementedError()
+    if _using_pyfftw:
+        in_out = _pyfftw.zeros_aligned((N, N),dtype=complex)
+    else:
+        in_out = _np.zeros((N, N),dtype=complex)
+    in_out[:,:] = Fin.field
+    
+    _2pi = 2*_np.pi
+    legacy = True
+    if legacy:
+        _2pi = 2.*3.141592654 #make comparable to Cpp version by using exact same val
+    
+    zz = z
+    z = abs(z)
+    kz = _2pi/(lam*z)
+    cokz = _np.cos(kz)
+    sikz = _np.sin(kz)
+    
+    # Sign pattern effectively equals an fftshift(), see Fresnel code
+    iiN = _np.ones((N,),dtype=float)
+    iiN[1::2] = -1 #alternating pattern +,-,+,-,+,-,...
+    iiij = _np.outer(iiN, iiN)
+    in_out *= iiij
+    
+    z1 = z*lam/2
+    No2 = int(N/2)
+
+    SW = _np.arange(-No2, N-No2)/size
+    SW *= SW
+    SSW = SW.reshape((-1,1)) + SW #fill NxN shape like np.outer()
+    Bus = z1 * SSW
+    Ir = Bus.astype(int) #truncate, not round
+    Abus = _2pi*(Ir-Bus) #clip to interval [-2pi, 0]
+    Cab = _np.cos(Abus)
+    Sab = _np.sin(Abus)
+    CC = Cab + 1j * Sab #noticably faster than writing exp(1j*Abus)
+    
+    if zz >= 0.0:
+        in_out = _fft2(in_out, **_fftargs)
+        in_out *= CC
+        in_out = _ifft2(in_out, **_fftargs)
+    else:
+        in_out = _ifft2(in_out, **_fftargs)
+        CCB = CC.conjugate()
+        in_out *= CCB
+        in_out = _fft2(in_out, **_fftargs)
+    
+    in_out *= (cokz + 1j* sikz)
+    in_out *= iiij #/N**2 omitted since pyfftw already normalizes (numpy too)
+    Fout.field = in_out
+    return Fout
 
 
 def TODOSteps(self, z, nstep, refr, Fin):

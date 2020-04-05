@@ -76,7 +76,7 @@ from ._LightPipes import Init
 _LP = Init() # noqa
 
 from .field import Field
-from .propagators import Fresnel, Forward
+from .propagators import Fresnel, Forward, Forvard
 from .lenses import Axicon, Lens, LensFarfield
 from .zernike import ZernikeName, ZernikeNolltoMN, noll_to_zern, \
     ZernikeFilter, ZernikeFit, Zernike
@@ -189,29 +189,6 @@ def Convert(Fin):
     
     """
     return _LP.Convert( Fin)
-
-@accept_new_field
-def Forvard(z, Fin):
-    """
-    Fout = Forvard(z, Fin)
-
-    :ref:`Propagates the field using a FFT algorithm. <Forvard>`
-
-    Args::
-    
-        z: propagation distance
-        Fin: input field
-        
-    Returns::
-     
-        Fout: output field (N x N square array of complex numbers).
-            
-    Example:
-    
-    :ref:`Diffraction from a circular aperture <Diffraction>`
-    
-    """
-    return _LP.Forvard(z, Fin)
 
 
 @accept_new_field
