@@ -243,37 +243,13 @@ def Forward(z, sizenew, Nnew, Fin):
     :ref:`Diffraction from a circular aperture <Diffraction>`
     
     """
-    """CPP
-        CMPLXVEC FieldNew;
-        FieldNew.resize(new_n, vector<complex<double> >(new_n,1.0));
-        int i_old, i_new, j_old, j_new;
-        int old_n,  on21, nn21;
-        double old_size;
-        double  x_new, y_new, dx_new, dx_old;
-        double  P1, P2, P3, P4, R22, dum; 
-        double fc1, fs1, fc2, fs2, fc3, fs3, fc4, fs4, fr, fi;
-        double c4c1, c2c3, c4s1, s4c1, s2c3, c2s1, s4c3, s2c1, c4s3, s2s3, \
-                s2s1, c2s3, s4s1, c4c3, s4s3, c2c1;
-    
-    """
     Fout = Field.begin(sizenew, Fin.lam, Nnew)
     
     field_in = Fin.field
     field_out = Fout.field
     
     field_out[:,:] = 0.0 #default is ones, clear
-    """
-        old_size = size;
-        old_n    = N;
     
-        on21     = (int)old_n/2 + 1;
-        nn21     = (int)new_n/2 + 1;
-        dx_new   = new_size/(new_n-1);
-        dx_old   = old_size/(old_n-1);
-    
-        R22=sqrt(1./(2.*lambda*z));          
-        fs1=fc1=fs2=fc2=fs3=fc3=fs4=fc4=0.; /* to make the compiler happy */    
-    """
     old_size = Fin.siz
     old_n    = Fin.N
     new_size = sizenew #renaming to match cpp code
@@ -287,7 +263,6 @@ def Forward(z, sizenew, Nnew, Fin):
     
     R22 = _np.sqrt(1/(2*Fin.lam*z))
 
-    # Y_new, X_new = Fout.mgrid_cartesian #!NOT equivalent since dx ~ N-1
     X_new = _np.arange(-nn2, new_n-nn2) * dx_new
     Y_new = X_new #same
     X_old = _np.arange(-on2, old_n-on2) * dx_old
@@ -295,20 +270,20 @@ def Forward(z, sizenew, Nnew, Fin):
     for i_new in range(new_n):
         x_new = X_new[i_new]
         
-        PP1 = R22*(2*(X_old-x_new)+dx_old)
-        PP3 = R22*(2*(X_old-x_new)-dx_old)
-        Fs1, Fc1 = _fresnel(PP1)
-        Fs3, Fc3 = _fresnel(PP3)
+        P1 = R22*(2*(X_old-x_new)+dx_old)
+        P3 = R22*(2*(X_old-x_new)-dx_old)
+        Fs1, Fc1 = _fresnel(P1)
+        Fs3, Fc3 = _fresnel(P3)
         for j_new in range(new_n):
             y_new = Y_new[j_new]
             
-            PP2 = R22*(2*(Y_old-y_new)-dx_old)
-            PP4 = R22*(2*(Y_old-y_new)+dx_old)
-            Fs2, Fc2 = _fresnel(PP2)
-            Fs4, Fc4 = _fresnel(PP4) #now arrays with index [j_old]
+            P2 = R22*(2*(Y_old-y_new)-dx_old)
+            P4 = R22*(2*(Y_old-y_new)+dx_old)
+            Fs2, Fc2 = _fresnel(P2)
+            Fs4, Fc4 = _fresnel(P4)
             
-            C4C1=_np.outer(Fc4, Fc1) #out[i, j] = a[i] * b[j] ->  out[j,i] = a[j]*b[i] here
-            C2S3=_np.outer(Fc2, Fs3)
+            C4C1=_np.outer(Fc4, Fc1) #out[i, j] = a[i] * b[j] 
+            C2S3=_np.outer(Fc2, Fs3) #->  out[j,i] = a[j]*b[i] here
             C4S1=_np.outer(Fc4, Fs1)
             S4C1=_np.outer(Fs4, Fc1)
             S2C3=_np.outer(Fs2, Fc3)
@@ -327,13 +302,14 @@ def Forward(z, sizenew, Nnew, Fin):
             
             Fr = 0.5 * field_in.real
             Fi = 0.5 * field_in.imag
-            Temp_c = (Fr * (C2S3 + C4S1 + S4C1+ S2C3- C2S1- S4C3- S2C1
-                            - C4S3)
-                      + Fi * (- S2S3+ S2S1+C2C3-S4S1-C4C3+C4C1+S4S3-C2C1)
-                      + 1j * Fr *(- C4C1+ S2S3+C4C3-S4S3+C2C1-S2S1+S4S1
-                                -C2C3)
-                      + 1j * Fi*( C2S3+S2C3+C4S1+S4C1 -C4S3-S4C3-C2S1
-                                  -S2C1))
+            Temp_c = (Fr * (C2S3 + C4S1 + S4C1 + S2C3
+                            - C2S1 - S4C3 - S2C1 - C4S3)
+                      + Fi * (-S2S3 + S2S1 + C2C3 - S4S1
+                              - C4C3 + C4C1 + S4S3 - C2C1)
+                      + 1j * Fr *(-C4C1 + S2S3 + C4C3 - S4S3
+                                  + C2C1 - S2S1 + S4S1 - C2C3)
+                      + 1j * Fi*(C2S3 + S2C3 + C4S1 + S4C1
+                                 - C4S3 - S4C3 - C2S1 - S2C1))
             field_out[j_new, i_new] = Temp_c.sum() #complex elementwise sum
     return Fout
 
