@@ -279,8 +279,6 @@ def Forward(z, sizenew, Nnew, Fin):
     new_size = sizenew #renaming to match cpp code
     new_n = Nnew
 
-    # on21     = int(old_n/2) + 1
-    # nn21     = int(new_n/2) + 1
     on2     = int(old_n/2)
     nn2     = int(new_n/2) #read "new n over 2"
     dx_new   = new_size/(new_n-1)
@@ -288,151 +286,55 @@ def Forward(z, sizenew, Nnew, Fin):
     #TODO again, dx seems better defined without -1, check this
     
     R22 = _np.sqrt(1/(2*Fin.lam*z))
-    """
-    for (i_new = 0; i_new < new_n; i_new++){
-        x_new = (i_new - nn21 + 1) * dx_new; 
-        for (j_new = 0; j_new < new_n; j_new++){
-            y_new = (j_new - nn21 + 1) * dx_new;
-    """
+
     # Y_new, X_new = Fout.mgrid_cartesian #!NOT equivalent since dx ~ N-1
     X_new = _np.arange(-nn2, new_n-nn2) * dx_new
-    Y_new = X_new
+    Y_new = X_new #same
+    X_old = _np.arange(-on2, old_n-on2) * dx_old
+    Y_old = X_old #same
     for i_new in range(new_n):
-        x_new = X_new[i_new] #slice lookup takes MUCH longer than re-calc!
+        x_new = X_new[i_new]
+        
+        PP1 = R22*(2*(X_old-x_new)+dx_old)
+        PP3 = R22*(2*(X_old-x_new)-dx_old)
+        Fs1, Fc1 = _fresnel(PP1)
+        Fs3, Fc3 = _fresnel(PP3)
         for j_new in range(new_n):
-            y_new = X_new[j_new]
-            """
-            FieldNew.at(i_new).at(j_new) = complex<double>(0.,0.);
-            for (i_old = 0; i_old < old_n; i_old++){
-                int io=i_old-on21+1; /* bug repaired: +1 added to formula */
-                for (j_old = 0; j_old < old_n; j_old++){
-                    int jo=j_old-on21+1; /* bug repaired: +1 added to formula */   
-            """
-            X_old = _np.arange(-on2, old_n-on2) * dx_old
-            PP1 = R22*(2*(X_old-x_new)+dx_old)
-            PP3 = R22*(2*(X_old-x_new)-dx_old)
-            Fs1, Fc1 = _fresnel(PP1)
-            Fs3, Fc3 = _fresnel(PP3)
+            y_new = Y_new[j_new]
             
-            for i_old in range(old_n):
-                # io = i_old - on2
-                # x_old = io * dx_old
-                # assert x_old == X_old[i_old]
-                # P1 = R22*(2*(x_old-x_new)+dx_old)
-                # P3 = R22*(2*(x_old-x_new)-dx_old)
-                # fs1, fc1 = _fresnel(P1)
-                # fs3, fc3 = _fresnel(P3)
-                fs1, fc1 = Fs1[i_old], Fc1[i_old]
-                fs3, fc3 = Fs3[i_old], Fc3[i_old]
-                
-                Y_old = _np.arange(-on2, old_n-on2) * dx_old
-                
-                PP2 = R22*(2*(Y_old-y_new)-dx_old)
-                PP4 = R22*(2*(Y_old-y_new)+dx_old)
-                Fs2, Fc2 = _fresnel(PP2)
-                Fs4, Fc4 = _fresnel(PP4) #now arrays with index [j_old]
-                
-                
-                C4c1=Fc4*fc1
-                C2s3=Fc2*fs3
-                C4s1=Fc4*fs1
-                S4c1=Fs4*fc1
-                S2c3=Fs2*fc3
-                C2s1=Fc2*fs1
-                S4c3=Fs4*fc3
-                S2c1=Fs2*fc1
-                C4s3=Fc4*fs3
-                S2s3=Fs2*fs3
-                S2s1=Fs2*fs1
-                C2c3=Fc2*fc3
-                S4s1=Fs4*fs1
-                C4c3=Fc4*fc3
-                C4c1=Fc4*fc1
-                S4s3=Fs4*fs3
-                C2c1=Fc2*fc1
-                
-                
-                for j_old in range(old_n):
-                    # jo = j_old - on2
-                    # y_old = jo * dx_old
-                    # assert y_old == Y_old[j_old]
-                    
-                    """
-                    P1=R22*(2*(dx_old*io-x_new)+dx_old);
-                    P2=R22*(2*(dx_old*jo-y_new)-dx_old);
-                    P3=R22*(2*(dx_old*io-x_new)-dx_old);
-                    P4=R22*(2*(dx_old*jo-y_new)+dx_old);
-                    dum=fresnl(P1,&fs1, &fc1);
-                    dum=fresnl(P2,&fs2, &fc2);
-                    dum=fresnl(P3,&fs3, &fc3);
-                    dum=fresnl(P4,&fs4, &fc4);
-                    """
-                    # P2 = R22*(2*(y_old-y_new)-dx_old)
-                    # P4 = R22*(2*(y_old-y_new)+dx_old)
-                    # fs2, fc2 = _fresnel(P2)
-                    # assert fs2 == Fs2[j_old]
-                    # fs4, fc4 = _fresnel(P4)
-                    
-                    # fs2, fc2 = Fs2[j_old], Fc2[j_old]
-                    # fs4, fc4 = Fs4[j_old], Fc4[j_old]
-                    
-                    """
-                    c4c1=fc4*fc1;
-                    c2s3=fc2*fs3;
-                    c4s1=fc4*fs1;
-                    s4c1=fs4*fc1;
-                    s2c3=fs2*fc3;
-                    c2s1=fc2*fs1;
-                    s4c3=fs4*fc3;
-                    s2c1=fs2*fc1;
-                    c4s3=fc4*fs3;
-                    s2s3=fs2*fs3;
-                    s2s1=fs2*fs1;
-                    c2c3=fc2*fc3;
-                    s4s1=fs4*fs1;
-                    c4c3=fc4*fc3;
-                    c4c1=fc4*fc1;
-                    s4s3=fs4*fs3;
-                    c2c1=fc2*fc1;
-                    """
-                    
-                    c4c1=C4c1[j_old]
-                    c2s3=C2s3[j_old]
-                    c4s1=C4s1[j_old]
-                    s4c1=S4c1[j_old]
-                    s2c3=S2c3[j_old]
-                    c2s1=C2s1[j_old]
-                    s4c3=S4c3[j_old]
-                    s2c1=S2c1[j_old]
-                    c4s3=C4s3[j_old]
-                    s2s3=S2s3[j_old]
-                    s2s1=S2s1[j_old]
-                    c2c3=C2c3[j_old]
-                    s4s1=S4s1[j_old]
-                    c4c3=C4c3[j_old]
-                    c4c1=C4c1[j_old]
-                    s4s3=S4s3[j_old]
-                    c2c1=C2c1[j_old]
-                    
-                    """       
-                    fr=0.5*real(Field.at(i_old).at(j_old));
-                    fi=0.5*imag(Field.at(i_old).at(j_old));             
-                    FieldNew.at(i_new).at(j_new) += complex<double>(
-                        fr*( c2s3+c4s1+s4c1+s2c3-c2s1-s4c3-s2c1-c4s3) +
-                        fi*(-s2s3+s2s1+c2c3-s4s1-c4c3+c4c1+s4s3-c2c1), 
-                        fr*(-c4c1+s2s3+c4c3-s4s3+c2c1-s2s1+s4s1-c2c3) +
-                        fi*( c2s3+s2c3+c4s1+s4c1-c4s3-s4c3-c2s1-s2c1)
-                        );                                                        
-                    """
-                    fr = 0.5 * field_in[j_old, i_old].real #note swapped i,j!
-                    fi = 0.5 * field_in[j_old, i_old].imag
-                    
-                    field_out[j_new, i_new] += complex(
-                        fr*( c2s3+c4s1+s4c1+s2c3-c2s1-s4c3-s2c1-c4s3)
-                        + fi*(-s2s3+s2s1+c2c3-s4s1-c4c3+c4c1+s4s3-c2c1),
-                        fr*(-c4c1+s2s3+c4c3-s4s3+c2c1-s2s1+s4s1-c2c3)
-                        + fi*( c2s3+s2c3+c4s1+s4c1-c4s3-s4c3-c2s1-s2c1)
-                        )
+            PP2 = R22*(2*(Y_old-y_new)-dx_old)
+            PP4 = R22*(2*(Y_old-y_new)+dx_old)
+            Fs2, Fc2 = _fresnel(PP2)
+            Fs4, Fc4 = _fresnel(PP4) #now arrays with index [j_old]
+            
+            C4C1=_np.outer(Fc4, Fc1) #out[i, j] = a[i] * b[j] ->  out[j,i] = a[j]*b[i] here
+            C2S3=_np.outer(Fc2, Fs3)
+            C4S1=_np.outer(Fc4, Fs1)
+            S4C1=_np.outer(Fs4, Fc1)
+            S2C3=_np.outer(Fs2, Fc3)
+            C2S1=_np.outer(Fc2, Fs1)
+            S4C3=_np.outer(Fs4, Fc3)
+            S2C1=_np.outer(Fs2, Fc1)
+            C4S3=_np.outer(Fc4, Fs3)
+            S2S3=_np.outer(Fs2, Fs3)
+            S2S1=_np.outer(Fs2, Fs1)
+            C2C3=_np.outer(Fc2, Fc3)
+            S4S1=_np.outer(Fs4, Fs1)
+            C4C3=_np.outer(Fc4, Fc3)
+            C4C1=_np.outer(Fc4, Fc1)
+            S4S3=_np.outer(Fs4, Fs3)
+            C2C1=_np.outer(Fc2, Fc1)
+            
+            Fr = 0.5 * field_in.real
+            Fi = 0.5 * field_in.imag
+            Temp_c = (Fr * (C2S3 + C4S1 + S4C1+ S2C3- C2S1- S4C3- S2C1
+                            - C4S3)
+                      + Fi * (- S2S3+ S2S1+C2C3-S4S1-C4C3+C4C1+S4S3-C2C1)
+                      + 1j * Fr *(- C4C1+ S2S3+C4C3-S4S3+C2C1-S2S1+S4S1
+                                -C2C3)
+                      + 1j * Fi*( C2S3+S2C3+C4S1+S4C1 -C4S3-S4C3-C2S1
+                                  -S2C1))
+            field_out[j_new, i_new] = Temp_c.sum() #complex elementwise sum
     return Fout
 
 def TODOForvard(self, z, Fin):

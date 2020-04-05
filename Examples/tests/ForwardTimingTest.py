@@ -24,8 +24,8 @@ import oldLightPipes as olp
 wavelength=1*um
 size=20.0*mm
 
-N = 15 #choose small number since Forward will be slow
-N_new = 16
+N = 70 #choose small number since Forward will be slow
+N_new = 80
 
 size_new = N_new/N * size
 
@@ -38,7 +38,7 @@ z=1*m
 F = lp.Begin(size, wavelength, N)
 F = lp.CircAperture(R, 0, 0, F)
 F = lp.RectAperture(5*mm, size, 2.5*mm, 0, 13*deg, F)
-with tictoc.printtimer('lp.Forward'):
+with tictoc.printtimer('lp.Forward (Nold,new={},{})'.format(N, N_new)):
     F = lp.Forward(z, size_new, N_new, F)
 Ilp = lp.Intensity(0, F)
 x_mm = F.xvalues/mm
@@ -48,7 +48,7 @@ x_mm = F.xvalues/mm
 F = olp.Begin(size, wavelength, N)
 F = olp.CircAperture(R, 0, 0, F)
 F = olp.RectAperture(5*mm, size, 2.5*mm, 0, 13*deg, F)
-with tictoc.printtimer('olp.Forward'):
+with tictoc.printtimer('olp.Forward (Nold,new={},{})'.format(N, N_new)):
     F = olp.Forward(z, size_new, N_new, F)
 Iolp = np.asarray(olp.Intensity(0, F))
 
