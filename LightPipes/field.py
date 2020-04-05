@@ -140,11 +140,72 @@ class Field:
         field = _np.asarray(field, dtype=complex)
         #will not create a new instance if already good
         self._field = field
+
+
+    @property
+    def xvalues(self):
+        """
+        Return a 1d numpy array of the cartesian X coordinates for the pixels
+        of the field.
+        
+        Following the matplotlib.pyplot.imshow convention:
+        - positive shift in x is right
+        - positive shift in y is down
+        - coords define pixel center, so extent will be
+            [xmin-1/2dx, xmax+1/2dx]
+        For an odd number of pixels this puts a pixel in the center as expected
+        for an even number, the "mid" pixel shifts right and down by 1
+
+        Returns
+        -------
+        A 1d numpy array of each pixels center x-coordinate
+
+        """
+        w = self.N
+        cx = int(w/2)
+        xvals = self.dx * _np.arange(-cx, (w-cx))
+        return xvals
+
+
+    @property
+    def yvalues(self):
+        """
+        Return a 1d numpy array of the cartesian Y coordinates for the pixels
+        of the field.
+        
+        Following the matplotlib.pyplot.imshow convention:
+        - positive shift in x is right
+        - positive shift in y is down
+        - coords define pixel center, so extent will be
+            [xmin-1/2dx, xmax+1/2dx]
+        For an odd number of pixels this puts a pixel in the center as expected
+        for an even number, the "mid" pixel shifts right and down by 1
+
+        Returns
+        -------
+        A 1d numpy array of each pixels center y-coordinate
+
+        """
+        h = self.N
+        cy = int(h/2)
+        yvals = self.dx * _np.arange(-cy, (h-cy))
+        return yvals
+
     
     @property
     def mgrid_cartesian(self):
         """Return a meshgrid tuple (Y, X) of cartesian coordinates for each 
-        pixel of the field."""
+        pixel of the field.
+        
+        Following the matplotlib.pyplot.imshow convention:
+        - positive shift in x is right
+        - positive shift in y is down
+        - coords define pixel center, so extent will be
+            [xmin-1/2dx, xmax+1/2dx]
+        For an odd number of pixels this puts a pixel in the center as expected
+        for an even number, the "mid" pixel shifts right and down by 1
+        
+        """
         
         """LightPipes manual/ examples Matlab and Python version:
             plotting the Intensity with imshow() yields coord sys:
