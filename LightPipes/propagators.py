@@ -11,7 +11,7 @@ if _USE_PYFFTW:
         from pyfftw.interfaces.numpy_fft import ifft2 as _ifft2
         _fftargs = {'planner_effort': 'FFTW_ESTIMATE',
                     'overwrite_input': True,
-                    'threads': 4} #negative means use N_cpus according to doc
+                    'threads': -1} #<0 means use multiprocessing.cpu_count()
         _using_pyfftw = True
     except ImportError:
         import warnings
