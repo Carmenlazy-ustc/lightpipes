@@ -49,7 +49,7 @@ def Fresnel(z, Fin):
 
     """
     if (z<=0):
-        print('Fresnel: z must be larger than zero, but z = %3.2f. returned: Zout = Zin' %z)
+        print('Fresnel: z must be larger than zero, but z = %3.2f. returned: Fout = Fin' %z)
         return Fin
     Fout = Field.shallowcopy(Fin) #no need to copy .field as it will be
     # re-created anyway inside _field_Fresnel()
