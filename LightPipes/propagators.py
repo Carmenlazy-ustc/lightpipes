@@ -351,7 +351,8 @@ def Forvard(z, Fin):
     legacy = True
     if legacy:
         _2pi = 2.*3.141592654 #make comparable to Cpp version by using exact same val
-    
+    if (z==0): #check if z==0, return Fin
+        return Fin
     zz = z
     z = abs(z)
     kz = _2pi/(lam*z)
