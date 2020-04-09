@@ -17,7 +17,7 @@ def UNWRAP(ol, co, factor, hfactor):
     return ne
 
 
-def phaseunwrap(Phi):
+def unwrap_phase(Phi):
     """
     Attempt to unwrap the phase of the input. If data is noisy/unsmooth,
     this may result in unphysical patterns. In this case, try a finer sampling.

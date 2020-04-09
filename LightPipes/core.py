@@ -2,15 +2,19 @@
 
 import numpy as _np
 
-USE_SCIPY=True
-if USE_SCIPY:
-    #from skimage.restoration import unwrap_phase as _unwrap_phase
-    #used in PhaseUnwrap, or using own implementation in .unwrap
-    from scipy.special import hermite, genlaguerre
+from scipy.special import hermite, genlaguerre
+
+USE_SKIMAGE = False
+if USE_SKIMAGE:
+    from skimage.restoration import unwrap_phase as _unwrap_phase
+else:
+    #used in PhaseUnwrap
+    # own implementation currently slower, but seems a little more stable
+    # with jumpy phases and of course removes dependency on the extra package
+    from .unwrap import unwrap_phase as _unwrap_phase
 
 from .units import deg
 from .field import Field
-from .unwrap import phaseunwrap
 
 
 def BeamMix(Fin1, Fin2):
@@ -515,11 +519,7 @@ def PhaseUnwrap(Phi):
         PhiOut: unwrapped phase distribution (N x N square array of doubles)
 
     """
-    if USE_SCIPY:
-        PhiU = _unwrap_phase(Phi)
-    else:
-        PhiU = phaseunwrap(Phi)
-        
+    PhiU = _unwrap_phase(Phi)
     return PhiU
 
 
