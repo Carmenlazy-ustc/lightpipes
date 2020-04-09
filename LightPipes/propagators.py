@@ -52,7 +52,7 @@ def Fresnel(z, Fin):
         raise ValueError('Fresnel does not support negative z')
     if z == 0:
         Fout = Field.copy(Fin)
-        return Fout #still copy to be consistent
+        return Fout #return copy to avoid hidden reference/link
     Fout = Field.shallowcopy(Fin) #no need to copy .field as it will be
     # re-created anyway inside _field_Fresnel()
     Fout.field = _field_Fresnel(z, Fout.field, Fout.dx, Fout.lam)
@@ -248,6 +248,8 @@ def Forward(z, sizenew, Nnew, Fin):
     :ref:`Diffraction from a circular aperture <Diffraction>`
     
     """
+    if z <= 0:
+        raise ValueError('Forward does not support z<=0')
     Fout = Field.begin(sizenew, Fin.lam, Nnew)
     
     field_in = Fin.field
@@ -338,6 +340,9 @@ def Forvard(z, Fin):
     :ref:`Diffraction from a circular aperture <Diffraction>`
     
     """
+    if z==0:
+        Fout = Field.copy(Fin)
+        return Fout #return copy to avoid hidden reference
     Fout = Field.shallowcopy(Fin)
     N = Fout.N
     size = Fout.siz
