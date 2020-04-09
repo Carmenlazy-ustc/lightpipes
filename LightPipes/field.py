@@ -224,7 +224,24 @@ class Field:
         Y = (Y-cy)*self.dx
         X = (X-cx)*self.dx
         return (Y, X)
-    
+
+
+    @property
+    def mgrid_Rsquared(self):
+        """Return a meshgrid of radius R**2 in polar coordinates for each
+        pixel in the field."""
+        Y, X = self.mgrid_cartesian
+        return X**2+Y**2
+
+
+    @property
+    def mgrid_R(self):
+        """Return a meshgrid of radius R in polar coordinates for each
+        pixel in the field."""
+        #often phi might not be required, no need to calc it
+        return _np.sqrt(self.mgrid_Rsquared)
+
+
     @property
     def mgrid_polar(self):
         """Return a meshgrid tuple (R, Phi) of polar coordinates for each

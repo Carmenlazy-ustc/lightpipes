@@ -296,6 +296,86 @@ def Intensity(flag, Fin):
     return I
 
 
+def TODOInterpol(new_size, new_N, x_shift, y_shift, angle, magnif, Fin):
+    """
+    Fout = Interpol(NewSize, NewN, x_shift, y_shift, angle, magnif, Fin)
+    
+    :ref:`Interpolates the field to a new grid size, grid dimension. <Interpol>`
+    
+    Args::
+    
+        NewSize: the new grid size
+        NewN: the new grid dimension
+        x_shift, y_shift: shift of the field
+        angle: rotation of the field in degrees
+        magnif: magnification of the field amplitude
+        Fin: input field
+        
+    Returns::
+        
+        Fout: output field (Nnew x Nnew square array of complex numbers).
+  
+    """
+    Fout = Field.begin(new_size, Fin.lam, new_N)
+    """CPP
+    CMPLXVEC Fout;
+    Fout.resize(new_N, vector<complex<double> > (new_N));
+    double dx_new, dx_old, x_new, x_old, size_old,
+       y_new, y_old, lower, upper, ss, cc, x0, y0;
+    int i_old, j_old, old_number, on21, nn21;
+    """
+    """
+    """
+    size_old = Fin.siz;
+    old_number = Fin.N;
+    dx_new = new_size/(new_N-1) #TODO legacy, once again without -1 seems correct
+    dx_old = size_old/(old_number-1)
+    Pi = _np.pi
+    legacy = True
+    if legacy:
+        Pi = 3.141592654
+    angle *= Pi/180.;
+    
+    on21 = int(old_number/2)+1
+    nn21 = int(new_N/2)+1
+    lower = (1-on21)*dx_old
+    upper = (old_number-on21)*dx_old
+    cc=_np.cos(angle)
+    ss=_np.sin(angle)
+    for i in range(new_N):
+        for j in range(new_N):
+            x0 = (i-nn21+1)*dx_new - x_shift
+            y0 = (j-nn21+1)*dx_new - y_shift
+            raise NotImplementedError('Continue coding here...')
+            """
+            x_new=(x0*cc+y0*ss)/magnif;
+            y_new=(-x0*ss+y0*cc)/magnif; 
+            i_old=(int) floor(x_new/dx_old+on21);
+            x_old=(i_old-on21)*dx_old; 
+            j_old=(int) floor(y_new/dx_old+on21);
+            y_old=(j_old-on21)*dx_old;
+            if((x_new > lower) && (x_new < upper) && (y_new >lower) && (y_new < upper)){
+                Fout.at(i).at(j)= complex<double> (
+                    Inv_Squares(x_old, y_old, dx_old,
+                        Fin.at(i_old-1).at(j_old-1).real(),
+                        Fin.at(i_old).at(j_old-1).real(),
+                        Fin.at(i_old-1).at(j_old).real(),
+                        Fin.at(i_old).at(j_old).real(),
+                        x_new, y_new)/magnif , 
+                    Inv_Squares(x_old, y_old, dx_old,
+                        Fin.at(i_old-1).at(j_old-1).imag(),
+                        Fin.at(i_old).at(j_old-1).imag(),
+                        Fin.at(i_old-1).at(j_old).imag(),
+                        Fin.at(i_old).at(j_old).imag(),  
+                        x_new, y_new)/magnif );
+            }
+            else{
+                Fout.at(i).at(j)= complex<double>(0.0, 0.0);
+            }
+            """
+    return Fout
+
+
 def MultIntensity(Intens, Fin):
     """
     Fout = MultIntensity(Intens, Fin)

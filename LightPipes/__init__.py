@@ -77,7 +77,8 @@ _LP = Init() # noqa
 
 from .field import Field
 from .propagators import Fresnel, Forward, Forvard
-from .lenses import Axicon, Lens, LensFarfield
+from .lenses import Axicon, Lens, LensFarfield, LensForvard, LensFresnel, \
+    Convert
 from .zernike import ZernikeName, ZernikeNolltoMN, noll_to_zern, \
     ZernikeFilter, ZernikeFit, Zernike
 from .core import CircAperture, CircScreen, RectAperture, RectScreen
@@ -169,28 +170,6 @@ def Begin(size,labda,N):
     return Fout
 
 
-@accept_new_field
-def Convert(Fin):
-    """
-    Fout = Convert(Fin)
-
-    :ref:`Converts the field from a spherical variable coordinate to a normal coordinate system. <Convert>`
-
-    Args::
-    
-        Fin: input field
-        
-    Returns::
-     
-        Fout: output field (N x N square array of complex numbers).
-            
-    Example:
-    
-    :ref:`Unstable resonator <Unstab>`
-    
-    """
-    return _LP.Convert( Fin)
-
 @accept_new_field            
 def Interpol(new_size, new_number, x_shift, y_shift, angle, magnif, Fin):
     """
@@ -213,55 +192,6 @@ def Interpol(new_size, new_number, x_shift, y_shift, angle, magnif, Fin):
   
     """
     return _LP.Interpol(new_size, new_number, x_shift, y_shift, angle, magnif, Fin)
-
-
-@accept_new_field
-def LensForvard(f, z, Fin):
-    """
-    Fout = LensForvard(f, z, Fin)
-
-    :ref:`Propagates the field in a variable spherical coordinate system. <LensForvard>`
-        
-    Args::
-        
-        f: focal length
-        z: propagation distance
-        Fin: input field
-        
-    Returns::
-        
-        Fout: output field (N x N square array of complex numbers).
-        
-    Example:
-        
-    :ref:`Spherical coordinates <SphericalCoordinates>`
-        
-    """
-    return _LP.LensForvard(f, z, Fin)
-
-@accept_new_field
-def LensFresnel(f, z, Fin):
-    """
-    Fout = LensFresnel(f, z, Fin)
-
-    :ref:`Propagates the field in a variable spherical coordinate system. <LensFresnel>`
-        
-    Args::
-        
-        f: focal length
-        z: propagation distance
-        Fin: input field
-        
-    Returns::
-        
-        Fout: output field (N x N square array of complex numbers).
-        
-    Example:
-        
-    :ref:`Spherical coordinates <SphericalCoordinates>`
-        
-    """
-    return _LP.LensFresnel(f, z, Fin)
 
 
 @accept_new_field
