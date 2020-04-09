@@ -81,6 +81,7 @@ from .lenses import Axicon, Lens, LensFarfield
 from .zernike import ZernikeName, ZernikeNolltoMN, noll_to_zern, \
     ZernikeFilter, ZernikeFit, Zernike
 from .core import CircAperture, CircScreen, RectAperture, RectScreen
+from .core import GaussAperture, GaussScreen, GaussHermite, GaussLaguerre
 from .core import Intensity, Phase, PhaseUnwrap
 from .core import RandomIntensity, RandomPhase
 from .core import Strehl
@@ -189,111 +190,6 @@ def Convert(Fin):
     
     """
     return _LP.Convert( Fin)
-
-
-@accept_new_field
-def GaussAperture(w, x_shift, y_shift, T, Fin):
-    """
-    Fout = GaussAperture(w, x_shift, y_shift, T, Fin)
-    
-    :ref:`Inserts an aperture with a Gaussian shape in the field. <GaussAperture>`
-    
-        :math:`F_{out}(x,y)= \\sqrt{T}e^{ -\\frac{ x^{2}+y^{2} }{2w^{2}} } F_{in}(x,y)`
-
-    Args::
-    
-        w: 1/e intensity width
-        x_shift, y_shift: shift from center
-        T: center intensity transmission
-        Fin: input field
-    
-    Returns::
-    
-        Fout: output field (N x N square array of complex numbers).
-
-    """   
-    return _LP.GaussAperture( w, x_shift, y_shift, T, Fin)
-
-@accept_new_field
-def GaussScreen(w, x_shift, y_shift, T, Fin):
-    """
-    Fout = GaussScreen(w, x_shift, y_shift, T, Fin)
-    
-    :ref:`Inserts a screen with a Gaussian shape in the field. <GaussScreen>`
-
-        :math:`F_{out}(x,y)= \\sqrt{1-(1-T)e^{ -\\frac{ x^{2}+y^{2} }{w^{2}} }} F_{in}(x,y)`
-
-   Args::
-    
-        w: 1/e intensity width
-        x_shift, y_shift: shift from center
-        T: center intensity transmission
-        Fin: input field
-    
-    Returns::
-    
-        Fout: output field (N x N square array of complex numbers).
-
-    """   
-    return _LP.GaussScreen( w, x_shift, y_shift, T, Fin)
-
-@accept_new_field
-def GaussHermite(m, n, A, w0, Fin):
-    """
-    Fout = GaussHermite(m, n, A, w0, Fin)
-    
-    :ref:`Substitutes a Gauss-Hermite mode (beam waist) in the field. <GaussHermite>`
-
-        :math:`F_{m,n}(x,y,z=0) = A H_m\\left(\\dfrac{\\sqrt{2}x}{w_0}\\right)H_n\\left(\\dfrac{\\sqrt{2}y}{w_0}\\right)e^{-\\frac{x^2+y^2}{w_0^2}}`
-
-    Args::
-        
-        m, n: mode indices
-        A: Amplitude
-        w0: Guaussian spot size parameter in the beam waist (1/e amplitude point)
-        Fin: input field
-        
-    Returns::
-    
-        Fout: output field (N x N square array of complex numbers).            
-        
-    Reference::
-    
-        A. Siegman, "Lasers", p. 642
-
-    """
-    return _LP.GaussHermite( m, n, A, w0, Fin)
-
-@accept_new_field
-def GaussLaguerre(p, m, A, w0, Fin):
-    """
-    Fout = GaussLaguerre(p, m, A, w0, Fin)
-
-    :ref:`Substitutes a Gauss-Laguerre mode (beam waist) in the field. <GaussLaguerre>`
-
-        :math:`F_{p,m}(x,y,z=0) = A \\left(\\frac{\\rho}{2}\\right)^{\\frac{|m|}{2} }L^p_m\\left(\\rho\\right)e^{-\\frac{\\rho}{2}}\\cos(m\\theta)`,
-        
-        with :math:`\\rho=\\frac{2(x^2+y^2)}{w_0^2}`
-
-    Args::
-        
-        p, m: mode indices
-        A: Amplitude
-        w0: Guaussian spot size parameter in the beam waist (1/e amplitude point)
-        Fin: input field
-        
-    Returns::
-    
-        Fout: output field (N x N square array of complex numbers).            
-        
-    Reference::
-    
-        A. Siegman, "Lasers", p. 642
-
-    """
-        
-    return _LP.GaussLaguerre( p, m, A, w0, Fin)
-
 
 @accept_new_field            
 def Interpol(new_size, new_number, x_shift, y_shift, angle, magnif, Fin):

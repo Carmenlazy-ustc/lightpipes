@@ -2,10 +2,11 @@
 
 import numpy as _np
 
-USE_SCIPY=False
+USE_SCIPY=True
 if USE_SCIPY:
-    from skimage.restoration import unwrap_phase as _unwrap_phase
+    #from skimage.restoration import unwrap_phase as _unwrap_phase
     #used in PhaseUnwrap, or using own implementation in .unwrap
+    from scipy.special import hermite, genlaguerre
 
 from .units import deg
 from .field import Field
@@ -106,6 +107,140 @@ def CircScreen(R, x_shift, y_shift, Fin):
     dist_sq = X**2 + Y**2 #squared, no need for sqrt
     
     Fout.field[dist_sq <= R**2] = 0.0
+    return Fout
+
+def GaussAperture(w, x_shift, y_shift, T, Fin):
+    """
+    Fout = GaussAperture(w, x_shift, y_shift, T, Fin)
+    
+    :ref:`Inserts an aperture with a Gaussian shape in the field. <GaussAperture>`
+    
+        :math:`F_{out}(x,y)= \\sqrt{T}e^{ -\\frac{ x^{2}+y^{2} }{2w^{2}} } F_{in}(x,y)`
+
+    Args::
+    
+        w: 1/e intensity width
+        x_shift, y_shift: shift from center
+        T: center intensity transmission
+        Fin: input field
+    
+    Returns::
+    
+        Fout: output field (N x N square array of complex numbers).
+
+    """ 
+
+    Fout = Field.copy(Fin)
+    
+    Y, X = Fout.mgrid_cartesian
+    Y = Y - y_shift
+    X = X - x_shift
+
+    w2=w*w*2
+    SqrtT=_np.sqrt(T)
+    Fout.field*=SqrtT*_np.exp(-(X*X+Y*Y)/w2)
+    return Fout
+    
+def GaussScreen(w, x_shift, y_shift, T, Fin):
+    """
+    Fout = GaussScreen(w, x_shift, y_shift, T, Fin)
+    
+    :ref:`Inserts a screen with a Gaussian shape in the field. <GaussScreen>`
+
+        :math:`F_{out}(x,y)= \\sqrt{1-(1-T)e^{ -\\frac{ x^{2}+y^{2} }{w^{2}} }} F_{in}(x,y)`
+
+   Args::
+    
+        w: 1/e intensity width
+        x_shift, y_shift: shift from center
+        T: center intensity transmission
+        Fin: input field
+    
+    Returns::
+    
+        Fout: output field (N x N square array of complex numbers).
+
+    """  
+    Fout = Field.copy(Fin)
+    
+    Y, X = Fout.mgrid_cartesian
+    Y = Y - y_shift
+    X = X - x_shift
+
+    w2=w*w
+    Fout.field*=_np.sqrt(1-(1-T)*_np.exp(-(X*X+Y*Y)/w2))
+    return Fout
+    
+def GaussHermite( n, m, A, w0, Fin):
+    """
+    Fout = GaussHermite(m, n, A, w0, Fin)
+    
+    :ref:`Substitutes a Gauss-Hermite mode (beam waist) in the field. <GaussHermite>`
+
+        :math:`F_{m,n}(x,y,z=0) = A H_m\\left(\\dfrac{\\sqrt{2}x}{w_0}\\right)H_n\\left(\\dfrac{\\sqrt{2}y}{w_0}\\right)e^{-\\frac{x^2+y^2}{w_0^2}}`
+
+    Args::
+        
+        m, n: mode indices
+        A: Amplitude
+        w0: Guaussian spot size parameter in the beam waist (1/e amplitude point)
+        Fin: input field
+        
+    Returns::
+    
+        Fout: output field (N x N square array of complex numbers).            
+        
+    Reference::
+    
+        A. Siegman, "Lasers", p. 642
+
+    """
+
+    Fout = Field.copy(Fin)
+    
+    Y, X = Fout.mgrid_cartesian
+    #Y = Y - y_shift
+    #X = X - x_shift
+
+    sqrt2w0=_np.sqrt(2.0)/w0
+    w02=w0*w0
+
+    Fout.field  = A * hermite(m)(sqrt2w0*X)*hermite(n)(sqrt2w0*Y)*_np.exp(-(X*X+Y*Y)/w02)
+    return Fout
+    
+def GaussLaguerre(p, l, A, w0, Fin):
+    """
+    Fout = GaussLaguerre(p, l, A, w0, Fin)
+
+    :ref:`Substitutes a Gauss-Laguerre mode (beam waist) in the field. <GaussLaguerre>`
+
+        :math:`F_{p,l}(x,y,z=0) = A \\left(\\frac{\\rho}{2}\\right)^{\\frac{|l|}{2} }L^p_l\\left(\\rho\\right)e^{-\\frac{\\rho}{2}}\\cos(l\\theta)`,
+        
+        with :math:`\\rho=\\frac{2(x^2+y^2)}{w_0^2}`
+
+    Args::
+        
+        p, l: mode indices
+        A: Amplitude
+        w0: Guaussian spot size parameter in the beam waist (1/e amplitude point)
+        Fin: input field
+        
+    Returns::
+    
+        Fout: output field (N x N square array of complex numbers).            
+        
+    Reference::
+    
+        A. Siegman, "Lasers", p. 642
+
+    """
+
+    Fout = Field.copy(Fin)
+    R, Phi = Fout.mgrid_polar
+    w02=w0*w0
+    la=abs(l)
+    rho = 2*R*R/w02
+    Fout.field = A * rho**(la/2) * genlaguerre(p,l)(rho) * _np.exp(-rho/2) * _np.cos(l*Phi)
     return Fout
 
 
